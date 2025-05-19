@@ -46,4 +46,5 @@ jobs:
           vkey: ${{ secrets.VERACODE_API_KEY}}
           appname: 'STATIC GITHUB'
           createprofile: true
+          version: 'Build-${{ github.run_id }}'
           
