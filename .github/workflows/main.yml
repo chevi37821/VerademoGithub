@@ -37,14 +37,25 @@ jobs:
           name: verademo.war
           path: .
       
-      - name: veracode Upload and scan Action step
-        uses: veracode/Veracode-pipeline-scan-action@master
-        id: upload_and_scan  
-        with:
-          file: 'verademo.war'
-          vid: ${{ secrets.VERACODE_API_ID}}
-          vkey: ${{ secrets.VERACODE_API_KEY}}
-          appname: 'STATIC GITHUB'
-          createprofile: true
-          version: 'Build-${{ github.run_id }}'
+      #- name: veracode Upload and scan Action step
+       # uses: veracode/Veracode-pipeline-scan-action@master
+        #id: upload_and_scan  
+        #with:
+         # file: 'verademo.war'
+          #vid: ${{ secrets.VERACODE_API_ID}}
+          #vkey: ${{ secrets.VERACODE_API_KEY}}
+          #appname: 'STATIC GITHUB'
+          #createprofile: true
+          #version: 'Build-${{ github.run_id }}'
+
+      - name: Veracode Upload and Scan
+  uses: veracode/veracode-uploadandscan-action@master
+  with:
+    appname: 'STATIC GITHUB'              # Nombre del perfil de aplicación
+    createprofile: true                  # Crea el perfil si no existe
+    version: 'Build-${{ github.run_id }}'
+    filepath: 'verademo.war'             # Ruta al archivo .war
+    vid: ${{ secrets.VERACODE_API_ID }}
+    vkey: ${{ secrets.VERACODE_API_KEY }}
+
           
