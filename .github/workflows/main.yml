@@ -51,7 +51,7 @@ jobs:
       - name: Veracode Upload and Scan
         uses: veracode/veracode-uploadandscan-action@master
         with:
-          appname: 'STATIC GITHUB'              # Nombre del perfil de aplicación
+          appname: 'STATIC_GITHUB'              # Nombre del perfil de aplicación
           createprofile: true                  # Crea el perfil si no existe
           version: 'Build-${{ github.run_id }}'
           file: 'verademo.war'             # Ruta al archivo .war
