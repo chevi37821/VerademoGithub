@@ -23,7 +23,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: verademo.war
-          path: target/verademo.war
+          path: app/target/verademo.war
 
   policy_scan:
     runs-on: ubuntu-latest
