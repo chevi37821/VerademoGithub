@@ -1,0 +1,65 @@
+name: dev Branch - Base Pipeline
+
+on:
+    pull_request:
+        types:
+            [opened, reopened]
+        branches:
+            - 'Veracopia'
+
+jobs:
+    Build:
+        runs-on: ubuntu-latest
+        steps:
+            # Comprueba tu repositorio en $GITHUB_WORKSPACE, para que tu trabajo pueda acceder a él
+            - name: Checking Out Code Repo
+              uses: actions/checkout@v2
+
+            # Limpiar directorio de salida
+            - name: Clean Output Directory
+              working-directory: ./app
+              run: mvn -B clean
+
+            #Configurando Java
+            - name: Set up JDK 8
+              uses: actions/setup-java@v2
+              with:
+                java-version: '8'
+                distribution: 'temurin'
+
+            # Construya el proyecto utilizando Maven.
+            - name: Build with Maven
+              working-directory: ./app
+              run: mvn -B package --file pom.xml
+
+            # Publicar artefactos.
+            - name: Step 3 - Use the Upload Artifact GitHub Action
+              uses: actions/upload-artifact@v3
+              with: 
+                name: MyBuiltArtifact
+                path: |
+                  ./app/target/verademo.war
+                  ./shell_scripts/veracode-scan-results.sh
+
+    VeracodeSandboxScan:
+        needs: Build
+        uses: ./.github/workflows/VeracodeSandboxScan.yml
+        secrets: inherit
+        with:
+          VERACODE_APP_PROFILE_NAME: 'verademo'
+          VERACODE_SANDBOX_NAME: 'dev_branch_github'
+
+    VeracodeContainerSecurity:
+        needs: Build
+        uses: ./.github/workflows/VeracodeContainerSecurity.yml
+        secrets: inherit
+        with:
+          REPO_URI: ${{ GITHUB.server_url }}/${{ GITHUB.REPOSITORY }}
+            
+    VeracodeSCA:
+        needs: Build
+        uses: ./.github/workflows/VeracodeSCA.yml
+        secrets: inherit
+        with:
+          SRCCLR_WORKSPACE_SLUG: 'YEEudonE'
+          SRCCLR_SCAN_DIR: './app'

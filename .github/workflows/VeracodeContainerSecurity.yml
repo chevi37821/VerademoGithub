@@ -1,0 +1,69 @@
+name: VeracodeContainerSecurity
+
+on:
+  workflow_call:
+    inputs:
+      REPO_URI:
+        required: true
+        type: string
+
+jobs:
+  ContainerScan:
+    runs-on: ubuntu-latest
+    steps:
+
+        # Runs Veracode Container Security - Failing on failed Bult-In Policy
+        - name: VERACODE CONTAINER SECURITY
+          if: ${{ success() }}
+          env:
+            VID: ${{ SECRETS.VID }}
+            VKEY: ${{ SECRETS.VKEY }}
+          run: |
+            handle_cs_code() {
+              echo ''
+              EXIT_CODE=$?
+              echo '[INFO] Veracode Container Security - Scan Result: ' $EXIT_CODE
+              echo ''
+              if [ $EXIT_CODE -ne 0 ]
+              then
+                echo '[INFO] Scan was succesfull and there are no issues.'
+                echo ''
+                exit 0
+              elif [ $EXIT_CODE -ne 3 ]
+              then
+                echo '[INFO] Scan was succesfull but there are some issues!'
+                echo ''
+                exit 0
+              else
+                '[INFO] There was a problem while executing Container Security!'
+                echo ''
+                exit $EXIT_CODE
+              fi
+            }
+            echo '================================'
+            echo '== SCANNING REPO ${{ inputs.REPO_URI }}'
+            echo '================================'
+            curl -fsS https://tools.veracode.com/veracode-cli/install | sh
+            export VERACODE_API_KEY_ID=$VID
+            export VERACODE_API_KEY_SECRET=$VKEY
+            trap 'handle_cs_code $1' ERR
+            ./veracode scan --type repo --source ${{ inputs.REPO_URI }} --format table --output cs_results.json
+
+        #It's recommended to create here an artifact (cs_results.json file) in order to store the Container Security scan results,
+        #so the user can review that file to take remediation actions on it
+
+        # Verify Container Security results to control workflow
+        - name: Validating Container Security Scan Results
+          if: ${{ success() }}
+          run: |
+            echo '======================================================='
+            echo 'VALIDATING VERACODE CONTAINER SECURITY RESULTS...'
+            echo '======================================================='
+            cat cs_results.json
+            echo ''
+            PASS=$(cat cs_results.json | grep "Policy Passed = " | awk '{print $4}')
+            if $PASS; then
+              exit 0
+            else
+              exit 1
+            fi
